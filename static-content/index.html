@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<meta charset="utf-8">
+		<meta HTTP-EQUIV="EXPIRES" CONTENT="-1">
+		<title>Computing Science 309 Warehouse Wars</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<script language="javascript" src="scripts/jquery-3.3.1.min.js" > </script>
+   		<script language="javascript" src="scripts/actor.js" > </script>
+		<script language="javascript" src="scripts/ww.js" > </script>
+		<script language="javascript" src="scripts/ww_client.js" > </script>
+		<script language="javascript" src="scripts/ww_server.js" > </script>
+		<script language="javascript" src="scripts/player.js" > </script>
+		<script language="javascript" src="scripts/monster.js" > </script>
+     
+		<script language="javascript" src="scripts/wall.js" > </script>
+		<script language="javascript" src="scripts/box.js" > </script>
+		<script language="javascript" src="scripts/Astar.js" > </script>
+		<script language="javascript" src="scripts/advanced_monster.js" > </script>
+		<script language="javascript" src="scripts/evil_monster.js" > </script>
+
+		<script src="lib/react.js"></script>
+  		<script src="lib/react-dom.js"></script>
+ 		<script src="lib/babel.min.js"></script>
+
+   		
+		<script>
+      		current_stage = null;
+			stage=null;
+			// SOME GLUE CODE CONNECTING THIS PAGE TO THE STAGE
+			interval=null;
+			function setupGame(){
+				// Stage has parameters as orderly: width, height, number of monster, percentage of box, and elementID
+				stage=new Stage(20,20,5,20,20,20,"stage");
+			}
+			function startGame(){
+				stage.initialize();
+			}
+			function pauseGame(){
+				// YOUR CODE GOES HERE
+			}
+			// YOUR CODE GOES HERE
+
+			$(function(){
+				setupGame();
+			});
+			
+			// Source: google map API and Arnold's website API
+			if(navigator.geolocation) {
+   				navigator.geolocation.getCurrentPosition(function(position) {
+   					$.getJSON('http://maps.googleapis.com/maps/api/geocode/json?latlng='+position.coords.latitude +"," + position.coords.longitude, {type:JSON}, function(data){
+   						document.getElementById("location").innerHTML += " from " +  data.results[2].formatted_address;
+   					});
+   				});
+			}
+		</script>
+	</head>
+	<body bgcolor="ffffff">
+		<center>
+			<h1>Warehouse Wars</h1>
+			<h3 id = "location"> Logging in</h3>
+			<div id="stage-field">
+						<table>
+							<tr>
+								<td> 
+								<div style="border:1px solid black">
+										<div id="update-field">
+									 	 <h3 id="greetings"> Welcome back </h3>
+								 		 <form>
+								 			 <fieldset>
+							 					<table>
+							 					 <tr><h3> Update Account </h3></tr>
+							 					 <tr><th><label for="user">Username</label></th><td><input id="updateuser" type="text" name="user"></td><td><input id="updateUsernameSubmit" type="button" value ="Update" onload='update_username()'/></td></tr>
+							 					 <tr><th><label for="password">Password</label></th><td><input id="updatepassword" type="password" name="password"></td><td><input id="updatePasswordSubmit" type="button" value ="Update" onload='update_password()'/></td></tr>
+							 					 <tr><th><label for="email">Email</label></th><td><input id="updateemail" title="Please enter valid email." type="email" name="email"></td><td><input id="updateEmailSubmit" type="button" value ="Update" onload='update_email()'/></td></tr>
+							 					 <tr><th><label for="firstName">First Name</label></th><td><input id="updatefirstname" type="text" name="firstName"></td><td><input id="updateFirstNameSubmit" type="button" value ="Update" onload='update_firstname()'/></td></tr>
+							 					 <tr><th><label for="lastName">Last Name</label></th><td><input id="updatelastname" type="text" name="lastName" ></td><td><input id="updateLastNameSubmit" type="button" value ="Update" onload='update_lastname()'/></td></tr>
+												 <div id="upgrade-field">
+								 					 <tr><th><label for="upgrade">Admin key</label></th><td><input id="upgradekey" type="password" name="adminkey" /></td><td><input id="upgradeAccountKeySubmit" type="button" value ="Update" onload='upgrade_key_account()'/></td></tr>
+	   										 	</div>
+												 <tr><th><input id="logoutSubmit" type="button" value ="Logout"/></th>
+						 						 <td><input id="deleteSelfSubmit" type="button" value ="Delete Account"/></td></tr>
+							 					</table>
+								 			 </fieldset>
+								 			 <div id="admin-options">
+								 				 <form>
+								 					 <fieldset>
+								 						 <table>
+							 								<tr> <h3> Admin Options </h3> </tr>
+								 								<tr><th><label for="makeupgrade">Create New Admin key</label></th><td><input id="newupgradekey" type="password" name="adminkey" /></td> <td><input id="createnewkeySubmit" type="button" value ="Create!"/></td></tr>
+								 								<tr><th><label for="retrieveUserInfo">Retrieve All User Info</label></th><td></td><td><input id="retrieveAllSubmit" type="button" value="Retrieve!"/></td></tr>
+								 								<tr><th><label for="upgradeuser">Upgrade User to Admin</label></th><td><input id="directupgrade" type="text" name="someoneupgrade" /></td>
+							 									 <td><input id="upgradeAccountSubmit" type="button" value ="Upgrade"/></td></tr>
+								 								<tr><th><label for="terminate">Delete User 😱</label></th><td><input id="deleteuser" type="text" name="decimate" /></td>
+							 									<td><input id="deleteOtherAccountSubmit" type="button" value ="Delet Dis"/></td></tr>
+								 						 </table>
+								 					 </fieldset>
+								 				</form>
+								 				<div id="allUsers"> </div>
+								 			 </div>
+								 		 </form>
+								 	 </div>
+								</div>
+								</td>
+								<td id="game-field"> </td>
+								<td>
+									<center>
+										<div style="border:1px solid black">
+										<h3>Game Contoller</h3>
+
+										<table class="ww-controller" >
+
+											<tr>
+												<td> <input id="StartButton" type="button" value="New Game" onclick='stage.changeState("START")' /> </td>
+												<td> <input id="PauseButton" type="button" value="Pause Game" onclick='stage.changeState("PAUSE")' /> </td>
+												<td> <input id="ResumeButton" type="button" value="Resume Game" onclick='stage.changeState("RESUME")' /> </td>
+												<td> <input id="QuitButton" type="button" value="Quit Game" onclick='stage.changeState("END")' /> </td>
+											</tr>
+
+										</table>
+										</div>
+										<div id="user-score">
+
+										</div>
+										<div style="border:1px solid black">
+										<h3>Score</h3>
+										<table>
+											<tr><input id="GameScore" type="text" value="0" disabled="true" /></tr>
+											<tr><input id="selfTopTen" type="button" value="Your High Scores" onclick='$("#your-stats").show()' /></tr>
+											<tr><input id="allTopTen" type="button" value="All Time High Scores" onclick='$("#all-stats").show()' /></tr>
+											<div id="your-stats">
+										</table>
+										<div id="all-stats">
+										</div>
+										<div style="border:1px solid black">
+										<h3>Legend</h3>
+										<table class="legend">
+											<tr>
+												<td> <img src="icons/blank.gif" id="blankImage" style="border:1px solid black"/> </td>
+												<td> <img src="icons/emblem-package-2-24.png" id="boxImage" style="border:1px solid black"/> </td>
+												<td> <img src="icons/face-cool-24.png" id="playerImage" style="border:1px solid black"/> </td>
+
+												<td> <img src="icons/face-devil-grin-24.png" id="monsterImage" style="border:1px solid black"/> </td>
+												<td> <img src="icons/face-devil-2-grin-24.png" id="smartMonsterImage" style="border:1px solid black"/> </td>
+												<td> <img src="icons/face-devil-3grin-24.png" id="InvisibleMonsterImage" style="border:1px solid black"/> </td>
+												<td> <img src="icons/wall.jpeg" id="wallImage" style="border:1px solid black"/> </td>
+											</tr>
+											<tr>
+												<td> Empty <br/> Square </td>
+												<td> Box </td>
+												<td> Player </td>
+												<td> Monster </td>
+												<td> Smart <br/> Monster </td>
+												<td> Invisible <br/> Monster </td>
+												<td> Wall </td>
+											</tr>
+										</table>
+									</div>
+
+									<div style="border:1px solid black">
+										<h3>Controls</h3>
+										<table class="controls" id="controls">
+											<tr>
+												<td><img src="icons/north_west.svg" onclick='stage.press("NW")' /></td>
+												<td><img src="icons/north.svg"   onclick='stage.press("N")'/></td>
+												<td><img src="icons/north_east.svg"  onclick='stage.press("NE")'/></td>
+											</tr>
+											<tr>
+												<td><img src="icons/west.svg"  onclick='stage.press("W")'/></td>
+												<td>&nbsp;</td>
+												<td><img src="icons/east.svg"  onclick='stage.press("E")' /></td>
+											</tr>
+											<tr>
+												<td><img src="icons/south_west.svg"  onclick='stage.press("SW")'/></td>
+												<td><img src="icons/south.svg"  onclick='stage.press("S")'/></td>
+												<td><img src="icons/south_east.svg"  onclick='stage.press("SE")'/></td>
+											</tr>
+										</table>
+									</div>
+									</div>
+							</center>
+						</td>
+					</tr>
+				</table>
+      		</div>
+      		<div id="register-field">
+				<h2> Registration </h2>
+				<form>
+					<fieldset>
+              			<table>
+							<tr><th><label for="user">Username</label></th><td><input id="registeruser" type="text" name="user" placeholder="eg. johndoe1" required></td></tr>
+							<tr><th><label for="password">Password</label></th><td><input id="registerpassword" type="password" name="password" required></td></tr>
+							<tr><th><label for="email">Email</label></th><td><input id="registeremail" title="Please enter valid email." type="email" name="email" placeholder="eg. john.doe@gmail.com"></td></tr>
+							<tr><th><label for="firstName">First Name</label></th><td><input id="registerfirstname" type="text" name="firstName" placeholder="eg. John"></td></tr>
+							<tr><th><label for="lastName">Last Name</label></th><td><input id="registerlastname" type="text" name="lastName" placeholder="eg. Doe"></td></tr>
+							<tr><th><label for="escalate">Admin key</label></th><td><input id="getadminkey" type="password" name="adminkey" /></td></tr>
+	            			<tr><th><input id="loginswitch" type="button" value ="Back" onclick='current_stage="login"; switch_stage()'/></th>
+								<td><input id="createAccountSubmit" type="button" value ="Register"/></td></tr>
+              			</table>
+					</fieldset>
+				</form>
+       		</div>
+			<div id="login-field">
+				<h2> Login </h2>
+					<form>
+						<fieldset>
+              				<table>
+								<tr><th><label for="user">Username</label></th><td><input id="loginuser" type="text" name="user" placeholder="eg. johndoe1" required></td></tr>
+								<tr><th><label for="password">Password</label></th><td><input id="loginpassword" type="password" name="password" required></td></tr>
+								<tr><th><input id="loginSubmit" type="button" value="Login"/></th>
+									<td><input id="registerswitch" type="button" value ="Register" onclick='current_stage="register"; switch_stage()'/></td>
+									<td><input id="allTopTen" type="button" value="All Time High Scores" onclick='$("#all-stats-login").show()' /></td></tr>
+              				</table>
+						</fieldset>
+
+						<div id="all-stats-login"> 
+					</form>
+			</div>
+		</center>
+	</body>
+</html>

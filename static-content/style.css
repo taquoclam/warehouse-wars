@@ -1,0 +1,43 @@
+body {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+	color: red;
+	text-shadow: 1px 2px 1px #7FDBFE;
+	border: 1px solid #e1e1e1;
+	background: #f4f4f4;
+	border-radius: 4px;
+	padding: 5px 15px;
+}
+
+h3 {
+	color: #111111;
+	text-shadow: 1px 2px 1px #7FDBFE;
+	border: 1px solid #e1e1e1;
+	background: #f4f4f4;
+	border-radius: 4px;
+	padding: 5px 15px;
+	font-size: 18px;
+}
+
+legend {
+	font-weight: bold;
+	font-size: 22px;
+}
+
+.btnAlign {
+	display: inline-block;
+}
+
+#stage-field {
+    display: false;
+}
+
+#login-field {
+    display: true;
+}
+
+#register-field {
+    display: false;
+}
